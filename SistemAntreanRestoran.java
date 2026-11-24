@@ -1,66 +1,69 @@
 import java.util.Scanner;
 
 public class SistemAntreanRestoran {
-    static final int MAX_MENU = 5;
-    static final int MAX_DATA = 50;
+    static final int MAX_ANTREAN = 100;
+    static final int JUMLAH_MENU = 10;
 
-    // Master Menu
+    // Data master menu: Array 1D (nama menu) dan Array 2D (harga, durasi masak)
     static String[] namaMenu = {
-        "Nasi Goreng", "Mie Goreng", "Ayam Bakar", "Soto Ayam", "Es Teh Manis"
+        "Nasi Goreng", "Mie Goreng", "Ayam Geprek", "Nasi Ayam", "Soto Ayam",
+        "Bakso", "Sate Ayam", "Nasi Pecel", "Es Teh", "Jus Jeruk"
     };
-    static int[][] infoMenu = {
-        {18000, 15},
+    static int[][] dataMenu = {
         {15000, 10},
-        {25000, 25},
-        {16000, 12},
-        {5000,  3}
+        {12000, 8},
+        {18000, 15},
+        {17000, 12},
+        {14000, 10},
+        {13000, 8},
+        {20000, 15},
+        {12000, 7},
+        {5000, 2},
+        {8000, 3}
     };
 
-    // Parallel Array Antrean Aktif
-    static String[] idPesanan = new String[MAX_DATA];
-    static String[] namaPelanggan = new String[MAX_DATA];
-    static String[] menuPesanan = new String[MAX_DATA];
-    static int[] jumlahPorsi = new int[MAX_DATA];
-    static int[] totalHarga = new int[MAX_DATA];
-    static int[] durasiMasak = new int[MAX_DATA];
+    // Array 1D data pesanan
+    static String[] idPesanan = new String[MAX_ANTREAN];
+    static String[] namaPelanggan = new String[MAX_ANTREAN];
+    static String[] rincianPesanan = new String[MAX_ANTREAN];
+    static int[] durasiPesanan = new int[MAX_ANTREAN];
+    static int[] totalPesanan = new int[MAX_ANTREAN];
 
-    // Parallel Array Riwayat Transaksi
-    static String[] idTransaksi = new String[MAX_DATA];
-    static String[] trxIdPesanan = new String[MAX_DATA];
-    static String[] trxPelanggan = new String[MAX_DATA];
-    static String[] trxMenu = new String[MAX_DATA];
-    static int[] trxTotalBayar = new int[MAX_DATA];
+    // Array 1D data transaksi
+    static String[] idTransaksi = new String[MAX_ANTREAN];
+    static String[] idPesananTransaksi = new String[MAX_ANTREAN];
+    static String[] namaPelangganTransaksi = new String[MAX_ANTREAN];
+    static String[] rincianTransaksi = new String[MAX_ANTREAN];
+    static int[] totalTransaksi = new int[MAX_ANTREAN];
 
-    // Counter & Penanda Ukuran
+    // Counter dan penanda ukuran
     static int jumlahAntrean = 0;
-    static int jumlahRiwayat = 0;
-    static int counterOrder = 0;
-    static int counterTrx = 0;
+    static int nomorPesanan = 0;
+    static int jumlahTransaksi = 0;
+    static int nomorTransaksi = 0;
 
     static Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
-        // Self-check logic sorting & searching
         jalankanSelfCheck();
 
         int pilihan;
         do {
-            tampilkanMenu();
-            System.out.print("Pilih menu (0-7): ");
-            while (!scanner.hasNextInt()) {
-                System.out.println("Input harus angka!");
-                scanner.next();
-                System.out.print("Pilih menu (0-7): ");
-            }
-            pilihan = scanner.nextInt();
-            scanner.nextLine();
+            tampilkanPilihan();
+            pilihan = bacaInt("Pilih menu (1-9): ");
 
             switch (pilihan) {
                 case 1:
-                    tambahPesanan();
+                    if (jumlahAntrean < MAX_ANTREAN) {
+                        tambahPesanan();
+                        jumlahAntrean++;
+                        nomorPesanan++;
+                    } else {
+                        System.out.println("Antrean sudah penuh");
+                    }
                     break;
                 case 2:
-                    tampilAntrean();
+                    tampilkanAntrean();
                     break;
                 case 3:
                     urutkanAntrean();
@@ -69,159 +72,138 @@ public class SistemAntreanRestoran {
                     editPesanan();
                     break;
                 case 5:
-                    hapusPesanan();
+                    jumlahAntrean = hapusPesanan();
                     break;
                 case 6:
-                    prosesPembayaran();
+                    if (prosesPembayaran() == 1) {
+                        jumlahAntrean--;
+                        jumlahTransaksi++;
+                        nomorTransaksi++;
+                    }
                     break;
                 case 7:
-                    menuRiwayatTransaksi();
+                    tampilkanSeluruhRiwayat();
                     break;
-                case 0:
-                    System.out.println("Program selesai.");
+                case 8:
+                    cariRiwayatTransaksi();
+                    break;
+                case 9:
+                    System.out.println("Terima kasih telah menggunakan sistem");
                     break;
                 default:
-                    System.out.println("Pilihan tidak valid!");
+                    System.out.println("Pilihan tidak valid");
             }
-        } while (pilihan != 0);
+        } while (pilihan != 9);
     }
 
-    static void tampilkanMenu() {
-        System.out.println("\n====================================");
-        System.out.println("      SISTEM ANTREAN RESTORAN       ");
-        System.out.println("====================================");
+    static void tampilkanPilihan() {
+        System.out.println("\n=== SISTEM ANTREAN RESTORAN ===");
         System.out.println("1. Tambah Pesanan");
         System.out.println("2. Tampilkan Antrean");
-        System.out.println("3. Urutkan Antrean (Durasi Masak)");
+        System.out.println("3. Urutkan Antrean");
         System.out.println("4. Edit Pesanan");
         System.out.println("5. Hapus Pesanan");
         System.out.println("6. Proses Pembayaran");
         System.out.println("7. Riwayat Transaksi");
-        System.out.println("0. Keluar");
+        System.out.println("8. Cari Transaksi");
+        System.out.println("9. Keluar");
     }
 
-    static int hitungTotalHarga(int harga, int porsi) {
-        return harga * porsi;
+    static void tampilkanMenu() {
+        System.out.println("\n=== DAFTAR MENU ===");
+        for (int i = 0; i < JUMLAH_MENU; i++) {
+            System.out.printf("%2d. %-12s | Harga: Rp%-6d | Durasi: %2d menit%n",
+                (i + 1), namaMenu[i], dataMenu[i][0], dataMenu[i][1]);
+        }
     }
 
     static void tambahPesanan() {
-        if (jumlahAntrean >= MAX_DATA) {
-            System.out.println("Kapasitas antrean penuh!");
-            return;
+        String nama = bacaString("Masukkan nama pelanggan: ");
+        while (nama.isEmpty()) {
+            System.out.println("Nama pelanggan tidak boleh kosong");
+            nama = bacaString("Masukkan nama pelanggan: ");
         }
 
-        tampilkanDaftarMenu();
+        int totalInput = 0;
+        int durasiTotal = 0;
+        StringBuilder rincianInput = new StringBuilder();
+        String tambahLagi = "Ya";
 
-        System.out.print("Masukkan Nama Pelanggan: ");
-        String nama = scanner.nextLine().trim();
-        if (nama.isEmpty()) {
-            System.out.println("Nama tidak boleh kosong!");
-            return;
+        while (tambahLagi.equalsIgnoreCase("Ya")) {
+            tampilkanMenu();
+            int nomorMenuInput = bacaNomorMenu();
+            int jumlahInput = bacaIntMin("Masukkan jumlah pesanan: ", 1);
+
+            int idx = nomorMenuInput - 1;
+            totalInput = totalInput + dataMenu[idx][0] * jumlahInput;
+            durasiTotal = durasiTotal + dataMenu[idx][1] * jumlahInput;
+            rincianInput.append(namaMenu[idx]).append(" x ").append(jumlahInput).append(", ");
+
+            tambahLagi = bacaYaTidak("Tambah menu lagi? (Ya/Tidak): ");
         }
 
-        System.out.print("Pilih Nomor Menu (1-" + MAX_MENU + "): ");
-        if (!scanner.hasNextInt()) {
-            System.out.println("Input nomor menu tidak valid!");
-            scanner.next();
-            return;
-        }
-        int pilihMenu = scanner.nextInt();
+        int i = jumlahAntrean;
+        idPesanan[i] = "P" + (nomorPesanan + 1);
+        namaPelanggan[i] = nama;
+        rincianPesanan[i] = rincianInput.substring(0, rincianInput.length() - 2);
+        durasiPesanan[i] = durasiTotal;
+        totalPesanan[i] = totalInput;
 
-        if (pilihMenu < 1 || pilihMenu > MAX_MENU) {
-            System.out.println("Nomor menu tidak valid!");
-            return;
-        }
-
-        System.out.print("Masukkan Jumlah Porsi: ");
-        if (!scanner.hasNextInt()) {
-            System.out.println("Input porsi tidak valid!");
-            scanner.next();
-            return;
-        }
-        int porsi = scanner.nextInt();
-        scanner.nextLine();
-
-        if (porsi <= 0) {
-            System.out.println("Jumlah porsi minimal 1!");
-            return;
-        }
-
-        simpanPesanan(nama, pilihMenu - 1, porsi);
-        System.out.println("Pesanan berhasil dicatat dengan ID: " + idPesanan[jumlahAntrean - 1]);
+        System.out.println("Pesanan berhasil ditambahkan dengan ID: " + idPesanan[i]);
     }
 
-    static void simpanPesanan(String nama, int menuIdx, int porsi) {
-        counterOrder++;
-        idPesanan[jumlahAntrean] = String.format("P%03d", counterOrder);
-        namaPelanggan[jumlahAntrean] = nama;
-        menuPesanan[jumlahAntrean] = namaMenu[menuIdx];
-        jumlahPorsi[jumlahAntrean] = porsi;
-        totalHarga[jumlahAntrean] = hitungTotalHarga(infoMenu[menuIdx][0], porsi);
-        durasiMasak[jumlahAntrean] = infoMenu[menuIdx][1];
-        jumlahAntrean++;
-    }
-
-    static void tampilkanDaftarMenu() {
-        System.out.println("\n=== DAFTAR MENU RESTORAN ===");
-        for (int i = 0; i < MAX_MENU; i++) {
-            System.out.printf("%d. %-15s | Harga: Rp%-6d | Durasi: %2d menit%n",
-                (i + 1), namaMenu[i], infoMenu[i][0], infoMenu[i][1]);
-        }
-    }
-
-    static void tampilAntrean() {
+    static void tampilkanAntrean() {
         if (jumlahAntrean == 0) {
-            System.out.println("Antrean pesanan masih kosong.");
+            System.out.println("Antrean masih kosong");
             return;
         }
 
-        System.out.println("\n=== DAFTAR ANTREAN MASAK ===");
+        System.out.println("\n=== DAFTAR ANTREAN ===");
         for (int i = 0; i < jumlahAntrean; i++) {
-            System.out.println((i + 1) + ". [" + idPesanan[i] + "] " + namaPelanggan[i] +
-                " - " + menuPesanan[i] + " (" + jumlahPorsi[i] + "x) | Durasi: " +
-                durasiMasak[i] + " menit | Total: Rp" + totalHarga[i]);
+            System.out.println("ANTREAN PESANAN KE-" + (i + 1));
+            System.out.println("=============================");
+            System.out.println("ID Pesanan: " + idPesanan[i]);
+            System.out.println("Nama Pelanggan: " + namaPelanggan[i]);
+            System.out.println("Rincian Pesanan: " + rincianPesanan[i]);
+            System.out.println("Durasi: " + durasiPesanan[i] + " menit");
+            System.out.println("Total Harga: Rp" + totalPesanan[i]);
+            System.out.println("-----------------------------");
         }
     }
 
     static void urutkanAntrean() {
-        if (jumlahAntrean <= 1) {
-            System.out.println("Data belum cukup diurutkan.");
-            return;
+        if (jumlahAntrean > 1) {
+            bubbleSortAntrean();
+            System.out.println("Antrean berhasil diurutkan");
+        } else {
+            System.out.println("Antrean tidak perlu diurutkan");
         }
-
-        bubbleSortAntrean();
-        System.out.println("Antrean berhasil diurutkan berdasarkan durasi masak (tercepat ke terlama).");
     }
 
     static void bubbleSortAntrean() {
-        // Bubble Sort ascending berdasarkan durasiMasak
+        // Bubble Sort ascending berdasarkan durasiPesanan
         for (int i = 0; i < jumlahAntrean - 1; i++) {
             for (int j = 0; j < jumlahAntrean - i - 1; j++) {
-                if (durasiMasak[j] > durasiMasak[j + 1]) {
-                    // Tukar seluruh parallel array
-                    int tempInt = durasiMasak[j];
-                    durasiMasak[j] = durasiMasak[j + 1];
-                    durasiMasak[j + 1] = tempInt;
+                if (durasiPesanan[j] > durasiPesanan[j + 1]) {
+                    int tempInt = durasiPesanan[j];
+                    durasiPesanan[j] = durasiPesanan[j + 1];
+                    durasiPesanan[j + 1] = tempInt;
 
-                    String tempStr = idPesanan[j];
+                    tempInt = totalPesanan[j];
+                    totalPesanan[j] = totalPesanan[j + 1];
+                    totalPesanan[j + 1] = tempInt;
+
+                    String tempString = idPesanan[j];
                     idPesanan[j] = idPesanan[j + 1];
-                    idPesanan[j + 1] = tempStr;
+                    idPesanan[j + 1] = tempString;
 
-                    tempStr = namaPelanggan[j];
+                    tempString = namaPelanggan[j];
                     namaPelanggan[j] = namaPelanggan[j + 1];
-                    namaPelanggan[j + 1] = tempStr;
+                    namaPelanggan[j + 1] = tempString;
 
-                    tempStr = menuPesanan[j];
-                    menuPesanan[j] = menuPesanan[j + 1];
-                    menuPesanan[j + 1] = tempStr;
-
-                    tempInt = jumlahPorsi[j];
-                    jumlahPorsi[j] = jumlahPorsi[j + 1];
-                    jumlahPorsi[j + 1] = tempInt;
-
-                    tempInt = totalHarga[j];
-                    totalHarga[j] = totalHarga[j + 1];
-                    totalHarga[j + 1] = tempInt;
+                    tempString = rincianPesanan[j];
+                    rincianPesanan[j] = rincianPesanan[j + 1];
+                    rincianPesanan[j + 1] = tempString;
                 }
             }
         }
@@ -229,281 +211,264 @@ public class SistemAntreanRestoran {
 
     static void editPesanan() {
         if (jumlahAntrean == 0) {
-            System.out.println("Antrean kosong. Tidak ada pesanan untuk diedit.");
+            System.out.println("Antrean kosong");
             return;
         }
 
-        tampilAntrean();
-        System.out.print("Pilih nomor antrean yang ingin diedit (1-" + jumlahAntrean + "): ");
-        if (!scanner.hasNextInt()) {
-            System.out.println("Input nomor antrean tidak valid!");
-            scanner.next();
-            return;
-        }
-        int noUrut = scanner.nextInt();
-        scanner.nextLine();
+        tampilkanAntrean();
+        String idCari = bacaString("Masukkan ID pesanan yang ingin diedit: ");
+        int i = cariIndexPesanan(idCari);
 
-        if (noUrut < 1 || noUrut > jumlahAntrean) {
-            System.out.println("Nomor antrean tidak valid!");
+        if (i == -1) {
+            System.out.println("Pesanan tidak ditemukan");
             return;
         }
 
-        int idx = noUrut - 1;
-        System.out.println("Mengedit pesanan ID: " + idPesanan[idx]);
-
-        System.out.print("Masukkan Nama Baru (kosongkan jika tidak diubah): ");
-        String namaBaru = scanner.nextLine().trim();
-        if (!namaBaru.isEmpty()) {
-            namaPelanggan[idx] = namaBaru;
+        String namaBaru = bacaString("Masukkan nama pelanggan: ");
+        while (namaBaru.isEmpty()) {
+            System.out.println("Nama pelanggan tidak boleh kosong");
+            namaBaru = bacaString("Masukkan nama pelanggan: ");
         }
 
-        tampilkanDaftarMenu();
-        System.out.print("Pilih Menu Baru (1-" + MAX_MENU + ", 0 jika tidak diubah): ");
-        if (!scanner.hasNextInt()) {
-            System.out.println("Input menu tidak valid!");
-            scanner.next();
-            return;
-        }
-        int menuBaru = scanner.nextInt();
+        int totalInput = 0;
+        int durasiTotal = 0;
+        StringBuilder rincianInput = new StringBuilder();
+        String tambahLagi = "Ya";
 
-        int menuIdx = -1;
-        if (menuBaru >= 1 && menuBaru <= MAX_MENU) {
-            menuIdx = menuBaru - 1;
-            menuPesanan[idx] = namaMenu[menuIdx];
-            durasiMasak[idx] = infoMenu[menuIdx][1];
-        } else if (menuBaru != 0) {
-            System.out.println("Nomor menu tidak valid. Menu tidak diubah.");
-        }
+        while (tambahLagi.equalsIgnoreCase("Ya")) {
+            tampilkanMenu();
+            int nomorMenuInput = bacaNomorMenu();
+            int jumlahInput = bacaIntMin("Masukkan jumlah pesanan: ", 1);
 
-        System.out.print("Masukkan Jumlah Porsi Baru (0 jika tidak diubah): ");
-        if (!scanner.hasNextInt()) {
-            System.out.println("Input porsi tidak valid!");
-            scanner.next();
-            return;
-        }
-        int porsiBaru = scanner.nextInt();
-        scanner.nextLine();
+            int idx = nomorMenuInput - 1;
+            totalInput = totalInput + dataMenu[idx][0] * jumlahInput;
+            durasiTotal = durasiTotal + dataMenu[idx][1] * jumlahInput;
+            rincianInput.append(namaMenu[idx]).append(" x ").append(jumlahInput).append(", ");
 
-        if (porsiBaru > 0) {
-            jumlahPorsi[idx] = porsiBaru;
+            tambahLagi = bacaYaTidak("Tambah menu lagi? (Ya/Tidak): ");
         }
 
-        // Hitung ulang harga jika menu atau porsi berubah
-        int hargaPerItem = (menuIdx != -1) ? infoMenu[menuIdx][0] : cariHargaMenu(menuPesanan[idx]);
-        totalHarga[idx] = hitungTotalHarga(hargaPerItem, jumlahPorsi[idx]);
+        namaPelanggan[i] = namaBaru;
+        rincianPesanan[i] = rincianInput.substring(0, rincianInput.length() - 2);
+        durasiPesanan[i] = durasiTotal;
+        totalPesanan[i] = totalInput;
 
-        System.out.println("Pesanan " + idPesanan[idx] + " berhasil diperbarui!");
+        System.out.println("Pesanan berhasil diedit");
     }
 
-    static int cariHargaMenu(String nama) {
-        for (int i = 0; i < MAX_MENU; i++) {
-            if (namaMenu[i].equalsIgnoreCase(nama)) {
-                return infoMenu[i][0];
-            }
-        }
-        return 0;
-    }
-
-    static void hapusPesanan() {
+    static int hapusPesanan() {
         if (jumlahAntrean == 0) {
-            System.out.println("Antrean kosong. Tidak ada pesanan untuk dihapus.");
-            return;
+            System.out.println("Antrean kosong");
+            return jumlahAntrean;
         }
 
-        tampilAntrean();
-        System.out.print("Pilih nomor antrean yang ingin dihapus (1-" + jumlahAntrean + "): ");
-        if (!scanner.hasNextInt()) {
-            System.out.println("Input nomor antrean tidak valid!");
-            scanner.next();
-            return;
-        }
-        int noUrut = scanner.nextInt();
-        scanner.nextLine();
+        tampilkanAntrean();
+        String idCari = bacaString("Masukkan ID pesanan yang ingin dihapus: ");
+        int i = cariIndexPesanan(idCari);
 
-        if (noUrut < 1 || noUrut > jumlahAntrean) {
-            System.out.println("Nomor antrean tidak valid!");
-            return;
+        if (i == -1) {
+            System.out.println("Pesanan tidak ditemukan");
+            return jumlahAntrean;
         }
 
-        int idx = noUrut - 1;
-        String idDihapus = idPesanan[idx];
-
-        // Geser ke kiri untuk menghapus elemen
-        for (int i = idx; i < jumlahAntrean - 1; i++) {
-            idPesanan[i] = idPesanan[i + 1];
-            namaPelanggan[i] = namaPelanggan[i + 1];
-            menuPesanan[i] = menuPesanan[i + 1];
-            jumlahPorsi[i] = jumlahPorsi[i + 1];
-            totalHarga[i] = totalHarga[i + 1];
-            durasiMasak[i] = durasiMasak[i + 1];
+        for (int k = i; k < jumlahAntrean - 1; k++) {
+            idPesanan[k] = idPesanan[k + 1];
+            namaPelanggan[k] = namaPelanggan[k + 1];
+            rincianPesanan[k] = rincianPesanan[k + 1];
+            durasiPesanan[k] = durasiPesanan[k + 1];
+            totalPesanan[k] = totalPesanan[k + 1];
         }
         jumlahAntrean--;
-        System.out.println("Pesanan " + idDihapus + " berhasil dihapus dari antrean.");
+        System.out.println("Pesanan berhasil dihapus");
+
+        return jumlahAntrean;
     }
 
-    static void prosesPembayaran() {
+    static int prosesPembayaran() {
         if (jumlahAntrean == 0) {
-            System.out.println("Tidak ada antrean yang dapat dibayar.");
-            return;
+            System.out.println("Antrean kosong");
+            return 0;
         }
 
-        tampilAntrean();
-        System.out.print("Pilih nomor antrean yang akan dibayar (1-" + jumlahAntrean + "): ");
-        if (!scanner.hasNextInt()) {
-            System.out.println("Input nomor antrean tidak valid!");
-            scanner.next();
-            return;
-        }
-        int noUrut = scanner.nextInt();
-
-        if (noUrut < 1 || noUrut > jumlahAntrean) {
-            System.out.println("Nomor antrean tidak valid!");
-            return;
+        if (jumlahTransaksi >= MAX_ANTREAN) {
+            System.out.println("Riwayat transaksi sudah penuh");
+            return 0;
         }
 
-        int idx = noUrut - 1;
-        System.out.println("Total Tagihan: Rp" + totalHarga[idx]);
-        System.out.print("Masukkan Nominal Uang Bayar: Rp");
-        if (!scanner.hasNextInt()) {
-            System.out.println("Input uang bayar tidak valid!");
-            scanner.next();
-            return;
-        }
-        int uangBayar = scanner.nextInt();
-        scanner.nextLine();
+        tampilkanAntrean();
+        String idCari = bacaString("Masukkan ID pesanan yang ingin dibayar: ");
+        int i = cariIndexPesanan(idCari);
 
-        if (uangBayar < totalHarga[idx]) {
-            System.out.println("Pembayaran gagal! Uang tidak mencukupi.");
-            return;
+        if (i == -1) {
+            System.out.println("Pesanan tidak ditemukan");
+            return 0;
         }
 
-        // Catat ke riwayat transaksi lunas
-        counterTrx++;
-        idTransaksi[jumlahRiwayat] = String.format("TRX%03d", counterTrx);
-        trxIdPesanan[jumlahRiwayat] = idPesanan[idx];
-        trxPelanggan[jumlahRiwayat] = namaPelanggan[idx];
-        trxMenu[jumlahRiwayat] = menuPesanan[idx];
-        trxTotalBayar[jumlahRiwayat] = totalHarga[idx];
-        jumlahRiwayat++;
-
-        int kembalian = uangBayar - totalHarga[idx];
-        System.out.println("Pembayaran Lunas! ID Transaksi: " + idTransaksi[jumlahRiwayat - 1] +
-            " | Kembalian: Rp" + kembalian);
-
-        // Hapus elemen dari antrean aktif (geser kiri)
-        for (int i = idx; i < jumlahAntrean - 1; i++) {
-            idPesanan[i] = idPesanan[i + 1];
-            namaPelanggan[i] = namaPelanggan[i + 1];
-            menuPesanan[i] = menuPesanan[i + 1];
-            jumlahPorsi[i] = jumlahPorsi[i + 1];
-            totalHarga[i] = totalHarga[i + 1];
-            durasiMasak[i] = durasiMasak[i + 1];
+        String konfirmasi = bacaYaTidak("Konfirmasi pembayaran? (Ya/Tidak): ");
+        if (!konfirmasi.equalsIgnoreCase("Ya")) {
+            System.out.println("Pembayaran dibatalkan");
+            return 0;
         }
-        jumlahAntrean--;
+
+        idTransaksi[jumlahTransaksi] = "T" + (nomorTransaksi + 1);
+        idPesananTransaksi[jumlahTransaksi] = idPesanan[i];
+        namaPelangganTransaksi[jumlahTransaksi] = namaPelanggan[i];
+        rincianTransaksi[jumlahTransaksi] = rincianPesanan[i];
+        totalTransaksi[jumlahTransaksi] = totalPesanan[i];
+
+        System.out.println("Pembayaran berhasil! ID Transaksi: " + idTransaksi[jumlahTransaksi]);
+
+        for (int k = i; k < jumlahAntrean - 1; k++) {
+            idPesanan[k] = idPesanan[k + 1];
+            namaPelanggan[k] = namaPelanggan[k + 1];
+            rincianPesanan[k] = rincianPesanan[k + 1];
+            durasiPesanan[k] = durasiPesanan[k + 1];
+            totalPesanan[k] = totalPesanan[k + 1];
+        }
+
+        return 1;
     }
 
-    static void menuRiwayatTransaksi() {
-        int subPilihan = 0;
-        do {
-            System.out.println("\n=== SUB-MENU RIWAYAT TRANSAKSI ===");
-            System.out.println("1. Tampilkan Seluruh Riwayat");
-            System.out.println("2. Cari Riwayat Transaksi (ID)");
-            System.out.println("3. Kembali ke Menu Utama");
-            System.out.print("Pilih sub-menu (1-3): ");
-            if (!scanner.hasNextInt()) {
-                System.out.println("Input harus angka!");
-                scanner.next();
-                continue;
+    static void tampilkanSeluruhRiwayat() {
+        if (jumlahTransaksi == 0) {
+            System.out.println("Belum ada riwayat transaksi");
+            return;
+        }
+
+        for (int i = 0; i < jumlahTransaksi; i++) {
+            System.out.println("==============================");
+            System.out.println("TRANSAKSI KE-" + (i + 1));
+            System.out.println("ID Transaksi: " + idTransaksi[i]);
+            System.out.println("ID Pesanan: " + idPesananTransaksi[i]);
+            System.out.println("Nama Pelanggan: " + namaPelangganTransaksi[i]);
+            System.out.println("Rincian Transaksi: " + rincianTransaksi[i]);
+            System.out.println("Total Pembayaran: Rp" + totalTransaksi[i]);
+            System.out.println("==============================");
+        }
+    }
+
+    static void cariRiwayatTransaksi() {
+        if (jumlahTransaksi == 0) {
+            System.out.println("Belum ada riwayat transaksi");
+            return;
+        }
+
+        String idCari = bacaString("Masukkan ID Transaksi: ");
+        int i = cariIndexTransaksi(idCari);
+
+        if (i == -1) {
+            System.out.println("Transaksi tidak ditemukan");
+            return;
+        }
+
+        System.out.println("Transaksi ditemukan");
+        System.out.println("==============================");
+        System.out.println("ID Transaksi: " + idTransaksi[i]);
+        System.out.println("ID Pesanan: " + idPesananTransaksi[i]);
+        System.out.println("Nama Pelanggan: " + namaPelangganTransaksi[i]);
+        System.out.println("Rincian Transaksi: " + rincianTransaksi[i]);
+        System.out.println("Total Pembayaran: Rp" + totalTransaksi[i]);
+        System.out.println("==============================");
+    }
+
+    // Linear Search data pesanan berdasarkan ID Pesanan
+    static int cariIndexPesanan(String idCari) {
+        int i = 0;
+        while (i < jumlahAntrean) {
+            if (idPesanan[i].equalsIgnoreCase(idCari)) {
+                return i;
             }
-            subPilihan = scanner.nextInt();
-            scanner.nextLine();
-
-            switch (subPilihan) {
-                case 1:
-                    tampilSeluruhRiwayat();
-                    break;
-                case 2:
-                    cariRiwayatTransaksi();
-                    break;
-                case 3:
-                    System.out.println("Kembali ke menu utama...");
-                    break;
-                default:
-                    System.out.println("Pilihan tidak valid!");
-            }
-        } while (subPilihan != 3);
+            i++;
+        }
+        return -1;
     }
 
-    static void tampilSeluruhRiwayat() {
-        if (jumlahRiwayat == 0) {
-            System.out.println("Belum ada riwayat transaksi lunas.");
-            return;
-        }
-
-        System.out.println("\n=== RINGKASAN RIWAYAT TRANSAKSI ===");
-        for (int i = 0; i < jumlahRiwayat; i++) {
-            System.out.println((i + 1) + ". [" + idTransaksi[i] + "] ID Pesanan: " +
-                trxIdPesanan[i] + " | Pelanggan: " + trxPelanggan[i] +
-                " | Menu: " + trxMenu[i] + " | Total: Rp" + trxTotalBayar[i]);
-        }
-    }
-
-    static int linearSearchRiwayat(String cariID) {
-        for (int i = 0; i < jumlahRiwayat; i++) {
-            if (idTransaksi[i].equalsIgnoreCase(cariID)) {
+    // Linear Search data transaksi berdasarkan ID Transaksi
+    static int cariIndexTransaksi(String idCari) {
+        for (int i = 0; i < jumlahTransaksi; i++) {
+            if (idTransaksi[i].equalsIgnoreCase(idCari)) {
                 return i;
             }
         }
         return -1;
     }
 
-    static void cariRiwayatTransaksi() {
-        if (jumlahRiwayat == 0) {
-            System.out.println("Belum ada riwayat transaksi.");
-            return;
+    static int bacaInt(String prompt) {
+        System.out.print(prompt);
+        while (!scanner.hasNextInt()) {
+            System.out.println("Input harus angka!");
+            scanner.next();
+            System.out.print(prompt);
         }
-
-        System.out.print("Masukkan ID Transaksi yang dicari: ");
-        String cariID = scanner.nextLine().trim();
-
-        int idxKetemu = linearSearchRiwayat(cariID);
-        if (idxKetemu != -1) {
-            System.out.println("\n=== DETAIL TRANSAKSI ===");
-            System.out.println("ID Transaksi : " + idTransaksi[idxKetemu]);
-            System.out.println("ID Pesanan   : " + trxIdPesanan[idxKetemu]);
-            System.out.println("Pelanggan    : " + trxPelanggan[idxKetemu]);
-            System.out.println("Menu         : " + trxMenu[idxKetemu]);
-            System.out.println("Total Bayar  : Rp" + trxTotalBayar[idxKetemu]);
-        } else {
-            System.out.println("ID Transaksi tidak ditemukan.");
-        }
+        int nilai = scanner.nextInt();
+        scanner.nextLine();
+        return nilai;
     }
 
-    // Runnable self-check saat boot
-    static void jalankanSelfCheck() {
-        if (hitungTotalHarga(18000, 2) != 36000) {
-            throw new AssertionError("Self-check gagal: hitungTotalHarga");
+    static int bacaIntMin(String prompt, int minimal) {
+        int nilai = bacaInt(prompt);
+        while (nilai < minimal) {
+            System.out.println("Jumlah harus lebih dari 0");
+            nilai = bacaInt(prompt);
         }
+        return nilai;
+    }
 
-        // Test sorting
-        simpanPesanan("TestA", 2, 1); // Ayam Bakar (25 menit)
-        simpanPesanan("TestB", 4, 1); // Es Teh (3 menit)
+    static int bacaNomorMenu() {
+        int nomor = bacaInt("Masukkan nomor menu: ");
+        while (nomor < 1 || nomor > JUMLAH_MENU) {
+            System.out.println("Nomor menu tidak valid");
+            nomor = bacaInt("Masukkan nomor menu: ");
+        }
+        return nomor;
+    }
+
+    static String bacaString(String prompt) {
+        System.out.print(prompt);
+        return scanner.nextLine().trim();
+    }
+
+    static String bacaYaTidak(String prompt) {
+        System.out.print(prompt);
+        String input = scanner.nextLine().trim();
+        while (!input.equalsIgnoreCase("Ya") && !input.equalsIgnoreCase("Tidak")) {
+            System.out.println("Input hanya Ya atau Tidak");
+            System.out.print(prompt);
+            input = scanner.nextLine().trim();
+        }
+        return input;
+    }
+
+    // Self-check Bubble Sort dan Linear Search saat program dijalankan
+    static void jalankanSelfCheck() {
+        idPesanan[0] = "P1";
+        namaPelanggan[0] = "TestA";
+        rincianPesanan[0] = "Nasi Goreng x 1";
+        durasiPesanan[0] = 10;
+        totalPesanan[0] = 15000;
+
+        idPesanan[1] = "P2";
+        namaPelanggan[1] = "TestB";
+        rincianPesanan[1] = "Es Teh x 1";
+        durasiPesanan[1] = 2;
+        totalPesanan[1] = 5000;
+
+        jumlahAntrean = 2;
         bubbleSortAntrean();
-        if (durasiMasak[0] != 3 || durasiMasak[1] != 25) {
+        if (durasiPesanan[0] != 2 || durasiPesanan[1] != 10) {
             throw new AssertionError("Self-check gagal: Bubble Sort tidak urut");
         }
-
-        // Test searching
-        idTransaksi[0] = "TRX001";
-        jumlahRiwayat = 1;
-        if (linearSearchRiwayat("TRX001") != 0 || linearSearchRiwayat("TRX999") != -1) {
-            throw new AssertionError("Self-check gagal: Linear Search bermasalah");
+        if (cariIndexPesanan("P1") != 1) {
+            throw new AssertionError("Self-check gagal: Linear Search pesanan bermasalah");
         }
 
-        // Reset state antrean & counter setelah test
+        idTransaksi[0] = "T1";
+        jumlahTransaksi = 1;
+        if (cariIndexTransaksi("T1") != 0 || cariIndexTransaksi("T999") != -1) {
+            throw new AssertionError("Self-check gagal: Linear Search transaksi bermasalah");
+        }
+
         jumlahAntrean = 0;
-        jumlahRiwayat = 0;
-        counterOrder = 0;
-        counterTrx = 0;
+        jumlahTransaksi = 0;
     }
 }
